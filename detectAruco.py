@@ -20,8 +20,10 @@ camera_params_path = os.path.join(exe_dir, 'camera_params.npz')
 
 intrinsic_camera = np.array([[971.2252, 0, 655.3664], [0, 970.7470, 367.5246], [0, 0, 1]])
 
+have_camera_params = False
 if os.path.exists(camera_params_path):
     calibration_file = np.load(camera_params_path)
+    have_camera_params = True
 else: 
     print('No camera params file， using default camera params.')
     cx = 655.3664
@@ -38,8 +40,9 @@ else:
 
 
 # calibration_file = np.load('camera_params.npz')
-intrinsic_camera = calibration_file['mtx']
-distortion = calibration_file['dist']
+if have_camera_params:
+    intrinsic_camera = calibration_file['mtx']
+    distortion = calibration_file['dist']
 # Define aruco dictionary
 arucoDict = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
 arucoParams = aruco.DetectorParameters()
