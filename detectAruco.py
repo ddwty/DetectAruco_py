@@ -7,10 +7,16 @@ import sys
 import socket
 import pickle
 
-# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# s.connect(('127.0.0.1', 12345))
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+try:
+    s.connect(('127.0.0.1', 12345))
+except ConnectionRefusedError:
+    print("Connection refused. Continuing without connection.")
+    # 在这里添加你的备用代码
 
 # 获取可执行文件所在的目录
+print("111111111")
 if getattr(sys, 'frozen', False):
     exe_dir = os.path.dirname(sys.executable)
 else:
@@ -18,7 +24,8 @@ else:
 
 camera_params_path = os.path.join(exe_dir, 'camera_params.npz')
 
-intrinsic_camera = np.array([[971.2252, 0, 655.3664], [0, 970.7470, 367.5246], [0, 0, 1]])
+intrinsic_camera = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+distortion = np.array([0, 0, 0, 0, 0])
 
 have_camera_params = False
 if os.path.exists(camera_params_path):
@@ -48,12 +55,9 @@ arucoDict = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
 arucoParams = aruco.DetectorParameters()
 arucoParams.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_CONTOUR
 
-# Camera calibration parameters
-# intrinsic_camera = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
-# distortion = np.array([k1, k2, p1, p2, k3])
-
-# detect aruco marker from camera
+print("opening camera...")
 cap = cv2.VideoCapture(0)
+
 fps = cap.get(cv2.CAP_PROP_FPS)
 width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -90,11 +94,11 @@ while cap.isOpened():
             print('id: ', ids[index])
             print("homogenous_trans_mtx\n", np.array2string(homogenous_trans_mtx, precision=3, suppress_small=True))
             serialized_data = pickle.dumps(homo_data)
-            # try:
-            #     # 发送数据
-            #     s.sendall(serialized_data)
-            # except socket.error as e:
-            #     print(f"Cannot send data, the server might be down.: {e}")
+            try:
+                # 发送数据
+                s.sendall(serialized_data)
+            except socket.error as e:
+                print(f"Cannot send data, the server might be down.: {e}")
             
 
     cv2.imshow('frame', img)
