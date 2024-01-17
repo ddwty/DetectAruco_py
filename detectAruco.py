@@ -8,15 +8,14 @@ import socket
 import pickle
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+port = int(input("Please enter the port number: "))
 try:
-    s.connect(('127.0.0.1', 12345))
+    s.connect(('127.0.0.1', port))
 except ConnectionRefusedError:
     print("Connection refused. Continuing without connection.")
-    # 在这里添加你的备用代码
+
 
 # 获取可执行文件所在的目录
-print("111111111")
 if getattr(sys, 'frozen', False):
     exe_dir = os.path.dirname(sys.executable)
 else:
