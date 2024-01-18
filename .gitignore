@@ -1,2 +1,8 @@
 env/
 build/
+capture_Image.py
+captureFormAnsorasir.py
+detectAruco.spec
+hello.py
+record_video.py
+testCamera.py
