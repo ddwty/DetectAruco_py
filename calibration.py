@@ -5,16 +5,15 @@ import time
 import shutil
 import sys
 
-
+# Set the chessboard size and grid width
 num_horizontal = 11
 num_vertical = 8
-grid_width = 0.020    # meter
-
+grid_width = 0.007    # meter
 
 def capture_calibration_images(camera_id, num_images, delay=3):
     folder = 'cali_imgs'
     if os.path.exists(folder):
-        # 删除文件夹中的所有文件
+        # Delete all files in the folder
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
             try:
@@ -25,11 +24,12 @@ def capture_calibration_images(camera_id, num_images, delay=3):
             except Exception as e:
                 print(f'Failed to delete {file_path}. Reason: {e}')
     else:
+        # If the folder does not exist, create it
         os.makedirs(folder)
 
     cap = cv2.VideoCapture(camera_id)
     if not cap.isOpened():
-        print("无法打开相机")
+        print("Failed to open the camera. Reason: {cap}")
         return
     
     photo_count = 0
@@ -38,43 +38,42 @@ def capture_calibration_images(camera_id, num_images, delay=3):
     while cap.isOpened() and photo_count < num_images:
         ret, frame = cap.read()
         font = cv2.FONT_HERSHEY_SIMPLEX
-         # 计算倒计时的剩余时间（秒）
+        # Calculate the remaining time for the countdown (in seconds)
         current_time = time.time()
         elapsed_time = current_time - start_time
         remaining_time = delay - elapsed_time if elapsed_time < delay else 0
 
-        # 计算扇形的结束角度
+        # Calculate the end angle of the sector
         end_angle = 360 * remaining_time / delay
 
-        # 绘制扇形
-        # cv2.ellipse(frame, (frame.shape[1]-220, frame.shape[0] - 15), (10, 10), -90, 0, end_angle, (0, 255, 0), -1)
-        # 创建一个和原始图像一样大小的全黑图像
+        # Create a copy of the original image with the same size
         overlay = np.zeros_like(frame)
 
-        # 创建一个和原始图像一样大小的副本
+        # Create a copy of the original image with the same size
         overlay = frame.copy()
 
-        # 在副本上绘制一个白色的椭圆
+        # Draw a white ellipse on the copy
         cv2.ellipse(overlay, (int(frame.shape[1]*0.5), int(frame.shape[0]*0.5)), (int(frame.shape[0]*0.5), int(frame.shape[0]*0.5)), -90, 0, end_angle, (255, 255, 255), -1)
 
-        # 将副本和原始图像混合，透明度为50%
+        # Blend the copy and the original image with a transparency of 50%
         alpha = 0.5
         cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
         cv2.putText(frame, f'Photo {photo_count + 1}/{num_images}', (frame.shape[1] - 200, frame.shape[0] - 10), font, 0.5, (0, 255, 0), 2, cv2.LINE_AA)
         cv2.imshow('Calibration', frame)
 
+        # Break the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-        # 每隔 delay 秒保存一次图像
+        # Save the image every delay seconds
         if time.time() - start_time >= delay:
             filename = os.path.join(folder, f'image_{photo_count}.jpg')
             cv2.imwrite(filename, frame)
-            print(f"图像已保存：{filename}")
+            print(f"Image saved：{filename}")
             photo_count += 1
             start_time = time.time()
 
-            # 保存图像后，显示一个全白的图像，然后再显示原始图像
+            # After saving the image, display a white image
             white_frame = np.ones_like(frame) * 255
             cv2.imshow('Calibration', white_frame)
             cv2.waitKey(100)  # 白色画面显示100毫秒
@@ -82,8 +81,6 @@ def capture_calibration_images(camera_id, num_images, delay=3):
 
     cap.release()
     cv2.destroyAllWindows()
-
-
 
 def calibrate_camera(folder):
     # termination criteria
@@ -99,7 +96,6 @@ def calibrate_camera(folder):
     images = sorted(images, key=lambda x: int(os.path.splitext(os.path.basename(x))[0].split('_')[1]))
 
     for fname in images:
-
         img = cv2.imread(fname)
         print("Image: ", fname)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -118,12 +114,13 @@ def calibrate_camera(folder):
             cv2.waitKey(500)
 
     if not objpoints or not imgpoints:
-        print("没有检测到足够的角点用于标定")
+        print("Not enough corners were detected for calibration")
         time.sleep(2)
         sys.exit(1)
     
     cv2.destroyAllWindows()
 
+    # Calibrate the camera
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
     # Calculate reprojection error
@@ -144,15 +141,15 @@ def calibrate_camera(folder):
 
     return ret, mtx, dist, rvecs, tvecs
 
+# Ask the user to input the camera ID
+camera_id = int(input("Please enter your camera ID: "))
+num_images = int(input("Please enter the number of photos you want to take: "))
 
-camera_id = 0 
-# num_images = int(input("请输入需要拍摄照片的数量："))
-
-# capture_calibration_images(camera_id, num_images)
+capture_calibration_images(camera_id, num_images)
 
 ret, mtx, dist, rvecs, tvecs = calibrate_camera('cali_imgs')
 if ret:
-    print("标定完成")
+    print("Calibration successful! Camera parameters are saved in 'camera_params.npz' file.")
     np.set_printoptions(precision=4, suppress=True)
     print('Camera Intrinsics Matrix:\n[[fx\t0\tcx]\n[0\tfy\tcy]\n[0\t0\t1]]  =\n', np.round(mtx, 4))
     print('dist:', np.round(dist, 4))
