@@ -10,7 +10,7 @@ import pickle
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 port = int(input("Please enter the port number: "))
 try:
-    s.connect(('127.0.0.1', port))
+    s.bind(('127.0.0.1', port))
 except ConnectionRefusedError:
     print("Connection refused. Continuing without connection.")
 
@@ -31,7 +31,7 @@ if os.path.exists(camera_params_path):
     calibration_file = np.load(camera_params_path)
     have_camera_params = True
 else: 
-    print('No camera params file， using default camera params.')
+    print('No camera params file, using default camera params.')
     cx = 655.3664
     cy = 367.5246
     fx = 971.2252
