@@ -76,7 +76,7 @@ def capture_calibration_images(camera_id, num_images, delay=3):
             # After saving the image, display a white image
             white_frame = np.ones_like(frame) * 255
             cv2.imshow('Calibration', white_frame)
-            cv2.waitKey(100)  # 白色画面显示100毫秒
+            cv2.waitKey(100) 
             cv2.imshow('Calibration', frame)
 
     cap.release()
@@ -91,7 +91,7 @@ def calibrate_camera(folder):
     # Arrays to store object points and image points from all the images.
     objpoints = [] # 3d point in real world space
     imgpoints = [] # 2d points in image plane.
-    # 读取文件夹中的图片
+    # Read images
     images = [os.path.join(folder, f) for f in os.listdir(folder) if f.endswith('.jpg')]
     images = sorted(images, key=lambda x: int(os.path.splitext(os.path.basename(x))[0].split('_')[1]))
 
